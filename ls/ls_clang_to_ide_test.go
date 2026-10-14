@@ -27,9 +27,15 @@ import (
 func TestClang2IdeDiagnosticsClearedHaveNoVersion(t *testing.T) {
 	tmp := paths.New(t.TempDir())
 	ideIno := lsp.NewDocumentURIFromPath(tmp.Join("Sketch", "Sketch.ino"))
-	buildSketchCpp := tmp.Join("build", "sketch", "Sketch.ino.cpp")
+	buildSketchRoot := tmp.Join("build", "sketch")
+	buildSketchCpp := buildSketchRoot.Join("Sketch.ino.cpp")
+	// The file must exist: on Windows the URI round trip lowercases the
+	// drive letter, so the paths only compare equal as the same file.
+	require.NoError(t, buildSketchRoot.MkdirAll())
+	require.NoError(t, buildSketchCpp.WriteFile(nil))
 	ls := &INOLanguageServer{
-		buildSketchCpp: buildSketchCpp,
+		buildSketchRoot: buildSketchRoot,
+		buildSketchCpp:  buildSketchCpp,
 		trackedIdeDocs: map[string]lsp.TextDocumentItem{
 			ideIno.AsPath().String(): {URI: ideIno, Version: 2},
 		},
